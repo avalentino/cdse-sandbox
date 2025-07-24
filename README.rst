@@ -20,12 +20,13 @@ Use cases
    The query shall generate a list of products and/or a json file with the
    products metadata.
 3. download a list of products for which the product IDs are provided.
-   The relevant products are:
+   The relevant products are (for Sentinel-1):
 
    * RAW
    * SLC
    * ETAD
    * orbit data
+   * engineering and auxiliary products
    * Copernicus DEM tiles
 
 
@@ -48,7 +49,8 @@ API documentation
 * Catalogue APIs: https://dataspace.copernicus.eu/analyse/apis/catalogue-apis
 * OData API: https://documentation.dataspace.copernicus.eu/APIs/OData.html
 * STAC API: https://documentation.dataspace.copernicus.eu/APIs/STAC.html
-* OpenSearch API: https://documentation.dataspace.copernicus.eu/APIs/OpenSearch.html
+* OpenSearch API:
+  https://documentation.dataspace.copernicus.eu/APIs/OpenSearch.html
   
   - Machine readable description of the query parameters:
 
@@ -56,6 +58,21 @@ API documentation
       https://catalogue.dataspace.copernicus.eu/resto/api/collections/Sentinel1/describe.xml
     * Copernicus DEM:
       https://catalogue.dataspace.copernicus.eu/resto/api/collections/COP-DEM/describe.xml
+
+
+Additional information
+----------------------
+
+* Data access via S3: https://documentation.dataspace.copernicus.eu/APIs/S3.html
+* Catalogie CSV:
+  https://documentation.dataspace.copernicus.eu/Applications/Catalogue-csv.html
+* Quotas and limitations:
+  https://documentation.dataspace.copernicus.eu/Quotas.html
+* Sentinel-1 Orbits:
+
+  - https://documentation.dataspace.copernicus.eu/Data/SentinelMissions/Sentinel1.html#sentinel-1-precise-orbit-determination-pod-products
+  - https://documentation.dataspace.copernicus.eu/Data/ComplementaryData/Additional.html#sentinel-1-orbits
+
 
 
 License
