@@ -1,3 +1,4 @@
+============
 cdse-sandbox
 ============
 
@@ -49,9 +50,17 @@ API documentation
 * Catalogue APIs: https://dataspace.copernicus.eu/analyse/apis/catalogue-apis
 * OData API: https://documentation.dataspace.copernicus.eu/APIs/OData.html
 * STAC API: https://documentation.dataspace.copernicus.eu/APIs/STAC.html
+
+  - query options:
+
+    * SENTINEL-1:
+      https://catalogue.dataspace.copernicus.eu/stac/collections/SENTINEL-1/queryables
+    * COP-DEM:
+      https://catalogue.dataspace.copernicus.eu/stac/collections/COP-DEM/queryables
+
 * OpenSearch API:
   https://documentation.dataspace.copernicus.eu/APIs/OpenSearch.html
-  
+
   - Machine readable description of the query parameters:
 
     * Sentinel-1:
