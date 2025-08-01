@@ -99,6 +99,12 @@ def get_auth_from_netrc(
         raise CredentialsNotFoundError(
             f"unable to get authentication credential for {url.geturl()}"
         )
-    user, _, password = auth_db.authenticators(key)
+    authdata = auth_db.authenticators(key)
+    if authdata is not None:
+        user, _, password = authdata
+    else:
+        raise CredentialsNotFoundError(
+            f"unable to get authentication credential for {url.geturl()}"
+        )
 
     return AuthData(user, password)

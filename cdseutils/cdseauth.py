@@ -43,13 +43,13 @@ class CdseTokenAuth:
                 "both 'username' and 'password' input parameters are needed"
             )
 
-        if password is None:
+        if username is not None and password is not None:
+            auth = AuthData(username=username, password=password)
+        else:
             try:
                 auth = get_auth_from_env(app_prefix="CDSE_")
             except CredentialsNotFoundError:
                 auth = get_auth_from_netrc(url=auth_server_url)
-        else:
-            auth = AuthData(username=username, password=password)
 
         self._auth_server_url: str = auth_server_url
         self._auth_data = auth
