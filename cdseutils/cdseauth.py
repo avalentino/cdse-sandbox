@@ -31,7 +31,7 @@ class AuthenticationError(RuntimeError):
     """Authentication error."""
 
 
-class CdseTokenAuth:
+class CdseToken:
     def __init__(
         self,
         username: str | None = None,
