@@ -28,7 +28,7 @@ DEFAULT_S3_KEY_SERVER_URL: str = (
 
 
 class AuthenticationError(RuntimeError):
-    """Authentication error"""
+    """Authentication error."""
 
 
 class CdseTokenAuth:
@@ -85,11 +85,11 @@ class CdseTokenAuth:
         self._access_token = data["access_token"]
         self._refresh_token = data["refresh_token"]
         margin = 1  # second
-        self._access_expiration_time = (
-            now + datetime.timedelta(seconds=expires_in - margin)
+        self._access_expiration_time = now + datetime.timedelta(
+            seconds=expires_in - margin
         )
-        self._refresh_expiration_time = (
-            now + datetime.timedelta(seconds=refresh_expires_in - margin)
+        self._refresh_expiration_time = now + datetime.timedelta(
+            seconds=refresh_expires_in - margin
         )
 
     def _get_access_token(self, username: str, password: str):
