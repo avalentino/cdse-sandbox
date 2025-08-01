@@ -73,6 +73,10 @@ Additional information
 ----------------------
 
 * Data access via S3: https://documentation.dataspace.copernicus.eu/APIs/S3.html
+
+  - Credentials management:
+    https://eodata-s3keysmanager.dataspace.copernicus.eu
+
 * Catalogie CSV:
   https://documentation.dataspace.copernicus.eu/Applications/Catalogue-csv.html
 * Quotas and limitations:
