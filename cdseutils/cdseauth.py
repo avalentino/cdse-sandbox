@@ -2,8 +2,10 @@
 # see also
 # https://documentation.dataspace.copernicus.eu/APIs/S3.html#example-script-to-download-product-using-python
 
-import logging
+import weakref
 import datetime
+import warnings
+from typing import Union
 
 import requests
 
@@ -13,9 +15,6 @@ from .auth import (
     AuthData,
     CredentialsNotFoundError,
 )
-
-
-_log = logging.getLogger(__name__)
 
 
 DEFAULT_AUTH_SERVER_URL: str = (
@@ -128,17 +127,101 @@ class CdseToken:
         return self.get()
 
 
-def get_s3_credentials(
-    token: str, key_server_url: str = DEFAULT_S3_KEY_SERVER_URL
-) -> str:
-    """Create temporary S3 credentials via S3 keys manager API."""
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
-    }
-    response = requests.post(key_server_url, headers=headers)
-    response.raise_for_status()
+TokenType = Union[str, CdseToken]
 
-    data = response.json()
 
-    return AuthData(data["access_id"], data["secret"])
+class CdseS3Credentials:
+    def __init__(
+        self,
+        token: CdseToken,
+        key_server_url: str = DEFAULT_S3_KEY_SERVER_URL,
+    ):
+        self._key_server_url = key_server_url
+        self._token = token
+        credentials, expiration_date = self._get_s3_auth(key_server_url, token)
+        self._credentials = credentials
+        self._expiration_date = expiration_date
+
+        # NOTE: weackref.finalize is used instead of `__del__` because the
+        # `__del__` is not guaranteed to be called if the object still exists
+        # when the interpreter exits.
+        # See https://docs.python.org/3/reference/datamodel.html#object.__del__
+        self._finalizer = weakref.finalize(
+            self,
+            CdseS3Credentials._delete_s3_credentials,
+            self._key_server_url,
+            self._credentials,
+            self._token,
+        )
+
+    @property
+    def access_id(self) -> str:
+        return self._credentials.username
+
+    @property
+    def secret(self) -> str:
+        return self._credentials.password
+
+    @property
+    def expiration_date(self) -> datetime.datetime:
+        return self._expiration_date
+
+    @staticmethod
+    def _get_headers(token: TokenType) -> dict[str, str]:
+        return {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json",
+        }
+
+    @staticmethod
+    def _get_s3_auth(
+        key_server_url: str, token: TokenType
+    ) -> tuple[AuthData, datetime.datetime]:
+        """Create S3 credentials via S3 keys manager API."""
+        headers = CdseS3Credentials._get_headers(token)
+        response = requests.post(key_server_url, headers=headers)
+        response.raise_for_status()
+
+        data = response.json()
+        print(data)
+
+        expiration_date = datetime.datetime.fromisoformat(
+            data["expiration_date"]
+        )
+
+        return AuthData(data["access_id"], data["secret"]), expiration_date
+
+    @staticmethod
+    def _delete_s3_credentials(
+        key_server_url: str, auth: AuthData, token: TokenType
+    ) -> None:
+        """Delete the S3 credentials via S3 keys manager API."""
+        url = f"{key_server_url}/access_id/{auth.username}"
+        headers = CdseS3Credentials._get_headers(token)
+
+        response = requests.delete(url, headers=headers)
+        if response.status_code != 204:
+            warnings.warn(
+                f"Failed to delete S3 credentials {auth.username}. "
+                f"Status code: {response.status_code}",
+                stacklevel=3,
+            )
+
+    def _delete(self):
+        if self._finalizer.alive:
+            self._finalizer()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._delete()
+
+    def is_valid(self) -> bool:
+        now = datetime.datetime.now(tz=datetime.UTC)
+        return self._finalizer.alive and (now < self._expiration_date)
+
+    def get(self) -> AuthData:
+        if not self.is_valid():
+            raise RuntimeError(f"invalid {self.__class__.__name__} object")
+        return self._credentials
