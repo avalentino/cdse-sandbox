@@ -34,14 +34,40 @@ Use cases
 SW tools
 --------
 
-* eodag v3.6.0 (01/07/2025) - https://github.com/CS-SI/eodag
-* cdsetool v0.2.13 (10/10/2024) - https://github.com/CDSETool/CDSETool
-* stac_client v0.9.0 (18/07/2025) - https://github.com/stac-utils/pystac-client
-* cdsodatacli v2025.4.9 (09/04/2025) - https://github.com/umr-lops/cdsodatacli
-* phidown v0.0.2 (29/04/2025) - https://github.com/ESA-PhiLab/phidown
-* eofetch v0.3 (03/01/2025) - https://github.com/stcorp/eofetch
-* cscip-client git commit 1f4dae4 (25/06/2025) -
-  https://github.com/stcorp/cscip-client
+.. list-table::
+
+   * - eodag
+     - v3.6.0
+     - 01/07/2025
+     - https://github.com/CS-SI/eodag
+   * - cdsetool
+     - v0.2.13
+     - 10/10/2024
+     - https://github.com/CDSETool/CDSETool
+   * - stac_client
+     - v0.9.0
+     - 18/07/2025
+     - https://github.com/stac-utils/pystac-client
+   * - stac-asset
+     - v0.4.6
+     - 05/11/2024
+     - https://github.com/stac-utils/stac-asset
+   * - cdsodatacli
+     - v2025.4.9
+     - 09/04/2025
+     - https://github.com/umr-lops/cdsodatacli
+   * - phidown
+     - v0.0.2
+     - 29/04/2025
+     - https://github.com/ESA-PhiLab/phidown
+   * - eofetch
+     - v0.3
+     - 03/01/2025
+     - https://github.com/stcorp/eofetch
+   * - cscip-client
+     - `commit 1f4dae4 <https://github.com/stcorp/cscip-client/commit/1f4dae468fa7541f7c1dc2bf0fdc51c1eb1063ed>`_
+     - 25/06/2025
+     - https://github.com/stcorp/cscip-client
 
 
 API documentation
@@ -85,7 +111,6 @@ Additional information
 
   - https://documentation.dataspace.copernicus.eu/Data/SentinelMissions/Sentinel1.html#sentinel-1-precise-orbit-determination-pod-products
   - https://documentation.dataspace.copernicus.eu/Data/ComplementaryData/Additional.html#sentinel-1-orbits
-
 
 
 License
