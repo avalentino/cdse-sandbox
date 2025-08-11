@@ -4,7 +4,8 @@ import os
 import netrc
 import pathlib
 from typing import NamedTuple, Union
-from urllib.parse import urlparse, ParseResult as Url
+from urllib.parse import urlparse
+from urllib.parse import ParseResult as Url
 
 PathType = Union[str, os.PathLike[str]]
 UrlType = Union[str, Url]
@@ -93,8 +94,8 @@ def get_auth_from_netrc(
 
     if url.geturl() in auth_db.hosts:
         key = url.geturl()
-    elif url.netloc in auth_db.hosts:
-        key = url.netloc
+    elif url.hostname in auth_db.hosts:
+        key = url.hostname
     else:
         raise CredentialsNotFoundError(
             f"unable to get authentication credential for {url.geturl()}"
