@@ -1,3 +1,5 @@
+"""Support classes and functions for the authentication on the CDSE."""
+
 # https://forum.dataspace.copernicus.eu/t/how-do-we-use-the-refresh-token-value-in-the-response-to-a-keycloak-token-request/331
 # see also
 # https://documentation.dataspace.copernicus.eu/APIs/S3.html#example-script-to-download-product-using-python
@@ -6,16 +8,17 @@ import weakref
 import datetime
 import warnings
 from typing import Union
+from urllib.parse import urlparse
+from collections.abc import Sequence
 
 import requests
 
 from .auth import (
-    get_auth_from_env,
-    get_auth_from_netrc,
     AuthData,
     CredentialsNotFoundError,
+    get_auth_from_env,
+    get_auth_from_netrc,
 )
-
 
 DEFAULT_AUTH_SERVER_URL: str = (
     "https://identity.dataspace.copernicus.eu/"
@@ -31,10 +34,16 @@ class AuthenticationError(RuntimeError):
 
 
 class CdseToken:
+    """Class for CDSE tokens management.
+
+    The token is automatically updated (or regenerated) what it expires.
+    """
+
     def __init__(
         self,
         username: str | None = None,
         password: str | None = None,
+        *,
         auth_server_url: str = DEFAULT_AUTH_SERVER_URL,
     ):
         if (username, password).count(None) == 1:
@@ -71,10 +80,10 @@ class CdseToken:
                 allow_redirects=False,
             )
             response.raise_for_status()
-        except requests.HTTPError:
+        except requests.HTTPError as exc:
             raise AuthenticationError(
                 f"unable to get the access token from {self._auth_server_url}"
-            )
+            ) from exc
 
         data = response.json()
 
@@ -113,14 +122,17 @@ class CdseToken:
         }
         self._core_get_access_token(auth_data=auth_data)
 
-    def get(self):
+    def get(self) -> str:
+        """Return the (updated) authentication token string."""
         now = datetime.datetime.now(tz=datetime.UTC)
         if now < self._access_expiration_time:
             return self._access_token
         if now < self._refresh_expiration_time:
             self._refresh_access_token()
             return self._access_token
-        self._get_access_token()
+        self._get_access_token(
+            self._auth_data.username, self._auth_data.password
+        )
         return self._access_token
 
     def __str__(self) -> str:
@@ -130,7 +142,87 @@ class CdseToken:
 TokenType = Union[str, CdseToken]
 
 
+# https://requests.readthedocs.io/en/latest/user/advanced/#custom-authentication
+# Example::
+#   requests.get(url, auth=CdseAuth(token))
+class CdseAuth(requests.auth.AuthBase):
+    """Token based authentication compatible with the `requests` package."""
+
+    def __init__(self, token: TokenType):
+        self._token = token
+
+    # https://documentation.dataspace.copernicus.eu/APIs/OData.html#product-download
+    def __call__(self, prepared_request):
+        """Add authorization headers to the input request."""
+        headers = {"Authorization": f"Bearer {self._token}"}
+        prepared_request.headers.update(headers)
+        return prepared_request
+
+
+# https://github.com/psf/requests/issues/2949
+# https://github.com/psf/requests/pull/4983
+class RedirectAuthSession(requests.Session):
+    """HTTP(S) session compatible with the `requests` package.
+
+    The session is configured to properly handle re-directions to the
+    specified thrusted domains without losing authentication information.
+    """
+
+    DEFAULT_TRUSTED_DOMAINS: frozenset[str] = frozenset()
+
+    def __init__(self, trusted_domains: Sequence[str] | None = None):
+        super().__init__()
+        if trusted_domains is None:
+            trusted_domain_set = self.DEFAULT_TRUSTED_DOMAINS
+        else:
+            trusted_domain_set = frozenset(trusted_domains)
+        self.trusted_domains: frozenset[str] = trusted_domain_set
+
+    def should_strip_auth(self, old_url: str, new_url: str) -> bool:
+        """Return True if auth should be striped.
+
+        Decide whether Authorization header should be removed when redirecting.
+        On top of the standard criteria this specialization of the method also
+        takes into account the 'trusted_domains' specified by the user.
+        """
+        old_parsed = urlparse(old_url)
+        new_parsed = urlparse(new_url)
+
+        if (
+            old_parsed.hostname != new_parsed.hostname
+            and new_parsed.hostname not in self.trusted_domains
+        ):
+            return True
+
+        # replace the trusted hostname with the old one to be able to exploit
+        # the base 'should_strip_auth' function
+        assert new_parsed.hostname
+        assert old_parsed.hostname
+        url = new_url.replace(new_parsed.hostname, old_parsed.hostname)
+        return super().should_strip_auth(old_url, url)
+
+
+class CdseSession(RedirectAuthSession):
+    """CDSE HTTP(S) session compatible with the `requests` package.
+
+    The session is configured to properly handle re-directions within the CDSE,
+    and to perform automatic token based authentication.
+    """
+
+    DEFAULT_TRUSTED_DOMAINS = frozenset([
+        "catalogue.dataspace.copernicus.eu",
+        "download.dataspace.copernicus.eu",
+    ])
+
+    def __init__(self, token: TokenType | None = None):
+        super().__init__()
+        if token is not None:
+            self.auth = CdseAuth(token)
+
+
 class CdseS3Credentials:
+    """Authentication credentials for the CDSE S3 bucket."""
+
     def __init__(
         self,
         token: CdseToken,
@@ -156,14 +248,17 @@ class CdseS3Credentials:
 
     @property
     def access_id(self) -> str:
+        """Access ID."""
         return self._credentials.username
 
     @property
     def secret(self) -> str:
+        """Secret passphrase."""
         return self._credentials.password
 
     @property
     def expiration_date(self) -> datetime.datetime:
+        """Credentials expiration date."""
         return self._expiration_date
 
     @staticmethod
@@ -183,8 +278,6 @@ class CdseS3Credentials:
         response.raise_for_status()
 
         data = response.json()
-        print(data)
-
         expiration_date = datetime.datetime.fromisoformat(
             data["expiration_date"]
         )
@@ -218,10 +311,15 @@ class CdseS3Credentials:
         self._delete()
 
     def is_valid(self) -> bool:
+        """Return `True` if the authentication credentials are valid."""
         now = datetime.datetime.now(tz=datetime.UTC)
         return self._finalizer.alive and (now < self._expiration_date)
 
     def get(self) -> AuthData:
+        """Return authentication credentials.
+
+        Credentials are returned as a (username, password) named tuple.
+        """
         if not self.is_valid():
             raise RuntimeError(f"invalid {self.__class__.__name__} object")
         return self._credentials
