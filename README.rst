@@ -103,7 +103,7 @@ Additional information
   - Credentials management:
     https://eodata-s3keysmanager.dataspace.copernicus.eu
 
-* Catalogie CSV:
+* Catalogue CSV:
   https://documentation.dataspace.copernicus.eu/Applications/Catalogue-csv.html
 * Quotas and limitations:
   https://documentation.dataspace.copernicus.eu/Quotas.html
