@@ -2,6 +2,7 @@
 
 import re
 import pathlib
+import warnings
 
 from tqdm.auto import tqdm
 
@@ -29,8 +30,33 @@ class CdseODataClient:
             content_disposition,
         )
         if not mobj:
-            return ""
+            raise ValueError(
+                "no output file name specified and it is not possible to "
+                "derive it from the request headers"
+            )
+
         return mobj.group("filename")
+
+    @staticmethod
+    def _new_path(outfile: str, outdir: str | None = None) -> pathlib.Path:
+        assert outfile is not None
+        if outdir is not None:
+            if pathlib.Path(outfile).is_absolute():
+                warnings.warn(
+                    "an absolute path has been provided as input "
+                    f"('{outfile}'), the 'outdir parameter' ('{outdir}') "
+                    "will be ignored",
+                    stacklevel=3,
+                )
+            path = pathlib.Path(outdir) / outfile
+        else:
+            path = pathlib.Path(outfile)
+
+        if path.exists():
+            raise FileExistsError(
+                f"File or directory already exists: '{path}'"
+            )
+        return path
 
     # https://documentation.dataspace.copernicus.eu/APIs/OData.html#product-download
     def download(
@@ -38,6 +64,7 @@ class CdseODataClient:
         url: str,
         outfile: str | None = None,
         *,
+        outdir: str | None = None,
         chunk_size: int | None = DEFAULT_CHUNK_SIZE,
         disable_progress: bool | None = None,
     ):
@@ -53,10 +80,7 @@ class CdseODataClient:
         raised.
         """
         if outfile:
-            if pathlib.Path(outfile).exists():
-                raise FileExistsError(
-                    f"File or directory already exists: '{outfile}'"
-                )
+            self._new_path(outfile, outdir=outdir)
 
         response = self.session.get(url, stream=True)
         response.raise_for_status()
@@ -69,15 +93,9 @@ class CdseODataClient:
 
         if not outfile:
             outfile = self._get_filename_from_headers(response.headers)
-            if not outfile:
-                raise ValueError(
-                    "'outfile' parameter not specified and "
-                    "it is not possible to derive it from the request headers"
-                )
-            if pathlib.Path(outfile).exists():
-                raise FileExistsError(
-                    f"File or directory already exists: '{outfile}'"
-                )
+
+        outpath = self._new_path(outfile, outdir=outdir)
+        outpath.parent.mkdir(exist_ok=True, parents=True)
 
         data_size = int(response.headers.get("Content-Length", 0))
         pbar = tqdm(
