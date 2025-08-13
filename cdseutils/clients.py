@@ -1,12 +1,24 @@
 """Client classes for CDSE services."""
 
 import re
+import enum
+import logging
 import pathlib
 import warnings
 
 from tqdm.auto import tqdm
 
 from .cdseauth import CdseSession, TokenType
+
+_log = logging.getLogger(__name__)
+
+
+class ESaveMode(enum.StrEnum):
+    """Mode for saving a file in case it already exists."""
+
+    OVERWRITE = "OVERWRITE"
+    NOT_OVERWRITE = "NO_OVERWRITE"
+    RAISE = "RAISE"
 
 
 class CdseODataClient:
@@ -38,7 +50,11 @@ class CdseODataClient:
         return mobj.group("filename")
 
     @staticmethod
-    def _new_path(outfile: str, outdir: str | None = None) -> pathlib.Path:
+    def _new_path(
+        outfile: str,
+        outdir: str | None = None,
+        save_mode: ESaveMode = ESaveMode.RAISE,
+    ) -> pathlib.Path:
         assert outfile is not None
         if outdir is not None:
             if pathlib.Path(outfile).is_absolute():
@@ -52,10 +68,11 @@ class CdseODataClient:
         else:
             path = pathlib.Path(outfile)
 
-        if path.exists():
+        if path.exists() and save_mode is ESaveMode.RAISE:
             raise FileExistsError(
                 f"File or directory already exists: '{path}'"
             )
+
         return path
 
     # https://documentation.dataspace.copernicus.eu/APIs/OData.html#product-download
@@ -67,6 +84,7 @@ class CdseODataClient:
         outdir: str | None = None,
         chunk_size: int | None = DEFAULT_CHUNK_SIZE,
         disable_progress: bool | None = None,
+        save_mode: ESaveMode = ESaveMode.NOT_OVERWRITE,
     ):
         """Download the file at the specified URL.
 
@@ -80,7 +98,7 @@ class CdseODataClient:
         raised.
         """
         if outfile:
-            self._new_path(outfile, outdir=outdir)
+            self._new_path(outfile, outdir=outdir, save_mode=save_mode)
 
         response = self.session.get(url, stream=True)
         response.raise_for_status()
@@ -94,7 +112,11 @@ class CdseODataClient:
         if not outfile:
             outfile = self._get_filename_from_headers(response.headers)
 
-        outpath = self._new_path(outfile, outdir=outdir)
+        outpath = self._new_path(outfile, outdir=outdir, save_mode=save_mode)
+        if outpath.exists() and save_mode is ESaveMode.NOT_OVERWRITE:
+            _log.info("file '%s' already exists, skip download", outpath)
+            return
+
         outpath.parent.mkdir(exist_ok=True, parents=True)
 
         data_size = int(response.headers.get("Content-Length", 0))
