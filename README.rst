@@ -52,10 +52,10 @@ SW tools
      - v0.4.6
      - 05/11/2024
      - https://github.com/stac-utils/stac-asset
-   * - cdsodatacli
-     - v2025.4.9
-     - 09/04/2025
-     - https://github.com/umr-lops/cdsodatacli
+   * - cdse-dl
+     - git commit e55233c01e34cb13dc8d640650822639fd2ae1d7
+     - 19/05/2025
+     - https://github.com/tylanderson/cdse-dl
    * - phidown
      - v0.0.2
      - 29/04/2025
@@ -64,10 +64,6 @@ SW tools
      - v0.3
      - 03/01/2025
      - https://github.com/stcorp/eofetch
-   * - cscip-client
-     - `commit 1f4dae4 <https://github.com/stcorp/cscip-client/commit/1f4dae468fa7541f7c1dc2bf0fdc51c1eb1063ed>`_
-     - 25/06/2025
-     - https://github.com/stcorp/cscip-client
 
 
 API documentation
@@ -75,6 +71,17 @@ API documentation
 
 * Catalogue APIs: https://dataspace.copernicus.eu/analyse/apis/catalogue-apis
 * OData API: https://documentation.dataspace.copernicus.eu/APIs/OData.html
+
+  - query options:
+    https://documentation.dataspace.copernicus.eu/APIs/OData.html#list-of-odata-query-attributes-by-collection
+
+    * All collections:
+      https://catalogue.dataspace.copernicus.eu/odata/v1/Attributes
+    * SENTINEL-!:
+      https://catalogue.dataspace.copernicus.eu/odata/v1/Attributes(SENTINEL-1)
+    * COP-DEM:
+      https://catalogue.dataspace.copernicus.eu/odata/v1/Attributes(COP-DEM)
+
 * STAC API: https://documentation.dataspace.copernicus.eu/APIs/STAC.html
 
   - query options:

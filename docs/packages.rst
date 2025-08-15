@@ -36,12 +36,12 @@
      - X
      -
      -
-   * - cdsodatacli
-     - v2025.4.9
-     - 09/04/2025
-     - https://github.com/umr-lops/cdsodatacli
+   * - cdse-dl
+     - git commit e55233c01e34cb13dc8d640650822639fd2ae1d7
+     - 19/05/2025
+     - https://github.com/tylanderson/cdse-dl
      - X
-     - X
+     -
      -
    * - phidown
      - v0.0.2
@@ -56,11 +56,4 @@
      - https://github.com/stcorp/eofetch
      - X
      - X
-     -
-   * - cscip-client
-     - `commit 1f4dae4 <https://github.com/stcorp/cscip-client/commit/1f4dae468fa7541f7c1dc2bf0fdc51c1eb1063ed>`_
-     - 25/06/2025
-     - https://github.com/stcorp/cscip-client
-     -
-     -
      -
