@@ -81,6 +81,8 @@ API documentation
       https://catalogue.dataspace.copernicus.eu/odata/v1/Attributes(SENTINEL-1)
     * COP-DEM:
       https://catalogue.dataspace.copernicus.eu/odata/v1/Attributes(COP-DEM)
+    * CCM (including DEM):
+      https://catalogue.dataspace.copernicus.eu/odata/v1/Attributes(CCM)
 
 * STAC API: https://documentation.dataspace.copernicus.eu/APIs/STAC.html
 
@@ -118,6 +120,9 @@ Additional information
 
   - https://documentation.dataspace.copernicus.eu/Data/SentinelMissions/Sentinel1.html#sentinel-1-precise-orbit-determination-pod-products
   - https://documentation.dataspace.copernicus.eu/Data/ComplementaryData/Additional.html#sentinel-1-orbits
+
+* productType for CCMs:
+  https://documentation.dataspace.copernicus.eu/Data/Others/CCM.html#copernicus-dem
 
 
 License
