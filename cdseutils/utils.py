@@ -6,10 +6,10 @@ from typing import NamedTuple
 class BBox(NamedTuple):
     """Bounding box."""
 
-    left: float
-    south: float
-    right: float
-    north: float
+    left: float = -180
+    bottom: float = -90
+    right: float = +180
+    top: float = +90
 
 
 def deg2dms(value: float) -> tuple[int, int, float]:
