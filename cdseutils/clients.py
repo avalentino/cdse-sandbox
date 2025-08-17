@@ -128,7 +128,7 @@ class CdseODataClient:
             unit_divisor=1024,
             disable=disable_progress,
         )
-        with open(outfile, "wb") as fd, pbar:
+        with open(outpath, "wb") as fd, pbar:
             for chunk in response.iter_content(chunk_size=chunk_size):
                 if chunk:  # filter out keep-alive new chunks
                     size = fd.write(chunk)
